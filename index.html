@@ -1,508 +1,1293 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>EVM-like Voting Prototype — LAVIS (Enhanced)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <!-- GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <!-- face-api.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-  <!-- QRCode.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVIS - Layered Authentication Voting System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <style>
-    body { background: linear-gradient(180deg,#eef6ff,#f9fbff); }
-    .card { border-radius:14px; box-shadow:0 10px 30px rgba(30,40,80,0.08); }
-    #video { width:100%; border-radius:8px; background:#000; }
-    canvas{ border-radius:8px; }
-    .small-muted{ font-size:.85rem; color:#666; }
-    .status-pill{ font-weight:600; padding:6px 10px; border-radius:999px; display:inline-block; }
-  </style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-custom {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 700px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+        }
+
+        .input-group-custom {
+            margin: 30px 0;
+        }
+
+        .input-group-custom label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 1.1rem;
+        }
+
+        .input-group-custom input {
+            width: 100%;
+            padding: 18px;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .input-group-custom input:focus {
+            outline: none;
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-custom {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+        }
+
+        .scanner-animation {
+            width: 250px;
+            height: 250px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .scanner-circle {
+            width: 100%;
+            height: 100%;
+            border: 5px solid #FF6B35;
+            border-radius: 50%;
+            position: relative;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        .scanner-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: #FF6B35;
+        }
+
+        .scanning-line {
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #FF6B35, transparent);
+            position: absolute;
+            animation: scan 2s infinite;
+        }
+
+        @keyframes scan {
+            0%, 100% { top: 0%; }
+            50% { top: 100%; }
+        }
+
+        .status-message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 3px solid #28a745;
+        }
+
+        .status-error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 3px solid #dc3545;
+        }
+
+        .status-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            border: 3px solid #ffc107;
+        }
+
+        .candidate-card {
+            border: 4px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        }
+
+        .candidate-card:hover {
+            border-color: #FF6B35;
+            transform: translateX(15px) scale(1.02);
+            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
+        }
+
+        .candidate-card.selected {
+            border-color: #FF6B35;
+            background: linear-gradient(135deg, #fff5f2, #ffe8e0);
+            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.4);
+            transform: scale(1.05);
+        }
+
+        .candidate-symbol {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .candidate-info h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .candidate-info p {
+            margin: 8px 0 0 0;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 25%;
+            right: 25%;
+            height: 4px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #999;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            color: white;
+            transform: scale(1.2);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .step.completed .step-circle {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .step-label {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .fingerprint-scanner {
+            width: 280px;
+            height: 280px;
+            margin: 40px auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+        }
+
+        .iris-scanner {
+            width: 300px;
+            height: 300px;
+            margin: 40px auto;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(30, 60, 114, 0.5);
+        }
+
+        .iris-icon {
+            font-size: 11rem;
+            color: white;
+            opacity: 0.4;
+            animation: irisPulse 2.5s infinite;
+        }
+
+        @keyframes irisPulse {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.08); opacity: 0.7; }
+        }
+
+        .iris-ring {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: irisRotate 3s linear infinite;
+        }
+
+        @keyframes irisRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .fingerprint-icon {
+            font-size: 10rem;
+            color: white;
+            opacity: 0.3;
+            animation: fingerPulse 2s infinite;
+        }
+
+        @keyframes fingerPulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.15); opacity: 0.6; }
+        }
+
+        .success-animation {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .success-icon {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 15px 50px rgba(40, 167, 69, 0.4);
+        }
+
+        .success-icon i {
+            font-size: 5rem;
+            color: white;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0) rotate(-180deg); }
+            to { transform: scale(1) rotate(0deg); }
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e7f3ff, #d0ebff);
+            border-left: 5px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.1);
+        }
+
+        /* Voter Card Styles */
+        .voter-card-display {
+            max-width: 600px;
+            margin: 30px auto;
+            perspective: 1000px;
+        }
+
+        .voter-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border: 3px solid #FF6B35;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .voter-card:hover {
+            transform: rotateY(5deg) rotateX(5deg);
+        }
+
+        .card-header-custom {
+            text-align: center;
+            border-bottom: 3px solid #FF6B35;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .election-commission-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .eci-flag {
+            font-size: 3rem;
+        }
+
+        .card-title-main {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+            margin: 5px 0;
+        }
+
+        .card-subtitle {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .voter-photo-section {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .voter-photo {
+            width: 150px;
+            height: 180px;
+            border: 4px solid #FF6B35;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #999;
+        }
+
+        .voter-details {
+            flex: 1;
+        }
+
+        .detail-row {
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .detail-label {
+            font-weight: 700;
+            color: #FF6B35;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 120px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .voter-id-highlight {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+            margin: 20px 0;
+        }
+
+        .card-footer-custom {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .card-custom {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .candidate-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .voter-photo-section {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .detail-row {
+                flex-direction: column;
+            }
+        }
+
+        .indian-flag-bg {
+            background: linear-gradient(to bottom, #FF9933 33%, white 33%, white 66%, #138808 66%);
+            padding: 2px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-lg-9 col-md-10">
-        <div class="card p-4">
-          <div class="d-flex align-items-center mb-3">
-            <div class="me-3">
-              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:56px;height:56px;font-weight:700;">E</div>
-            </div>
-            <div>
-              <h4 class="mb-0">EVM-like Voting Prototype — LAVIS</h4>
-              <div class="small-muted">Enhanced demo: biometric unlock, encrypted storage, hash-chain & VVPAT</div>
-            </div>
-          </div>
-
-          <!-- Loading Models Notice -->
-          <div id="modelsNotice" class="alert alert-info mb-3">
-            <strong>Loading ML models…</strong> This may take 4–12s on first load. Wait until models are Ready.
-          </div>
-
-          <!-- Step 1: Voter ID -->
-          <div id="step-1" class="mb-3">
-            <h5>1. Insert Smart Voter Card (simulate)</h5>
-            <div class="row g-2">
-              <div class="col-md-8">
-                <input id="voterInput" class="form-control" placeholder="Enter Voter ID (e.g. VOTER2025_01)">
-              </div>
-              <div class="col-md-4 d-flex gap-2">
-                <button id="btnLoadSample" class="btn btn-outline-secondary">Load Sample</button>
-                <button id="btnStartAuth" class="btn btn-primary">Verify & Unlock EVM</button>
-              </div>
-            </div>
-            <div id="voterStatus" class="mt-2"></div>
-          </div>
-
-          <!-- Step 2: Reference registration (one-time per ID) -->
-          <div id="step-2" class="mb-3" style="display:none;">
-            <h5>2. Register Template Photo (one-time)</h5>
-            <div class="small-muted mb-2">Upload a clear frontal photo for this voter. You can also use 'Use Camera' to capture reference.</div>
-            <div class="row g-2">
-              <div class="col-md-6">
-                <input id="refFile" type="file" accept="image/*" class="form-control mb-2">
-                <button id="btnUseCameraRef" class="btn btn-outline-primary btn-sm">Use Camera to Capture Reference</button>
-              </div>
-              <div class="col-md-6">
-                <div id="refPreview"></div>
-              </div>
-            </div>
-            <div class="mt-2">
-              <button id="btnProceedCam" class="btn btn-success">Proceed to Live Verification</button>
-            </div>
-          </div>
-
-          <!-- Step 3: Live verification & EVM unlock -->
-          <div id="step-3" class="mb-3" style="display:none;">
-            <h5>3. Live Biometric Verification</h5>
-            <div class="small-muted mb-2">Allow camera and align face in frame.</div>
-            <div class="row">
-              <div class="col-md-7">
-                <video id="video" autoplay muted playsinline></video>
-                <div class="mt-2 d-flex gap-2">
-                  <button id="btnCaptureLive" class="btn btn-success">Capture</button>
-                  <button id="btnRetryCapture" class="btn btn-outline-secondary">Clear</button>
+    <div class="container-main">
+        <!-- Screen 1: ID Verification -->
+        <div class="screen active" id="screen1">
+            <div class="card-custom">
+                <div class="logo">
+                    <i class="fas fa-vote-yea"></i>
                 </div>
-              </div>
-              <div class="col-md-5">
-                <div><strong>Reference</strong></div>
-                <canvas id="refCanvas" width="320" height="240" style="background:#fff;"></canvas>
-                <div class="mt-2"><strong>Live</strong></div>
-                <canvas id="liveCanvas" width="320" height="240" style="background:#fff;"></canvas>
-                <div class="mt-2" id="matchResult"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 4: Voting Booth (EVM) -->
-          <div id="step-4" style="display:none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="mb-0">4. EVM: Cast Your Vote</h5>
-              <div id="evmLockStatus" class="status-pill bg-warning text-dark">Locked</div>
-            </div>
-            <div class="small-muted mb-2">EVM unlocks after successful biometric verification. Only one vote per Voter ID allowed.</div>
-
-            <div id="evmScreen" style="display:none;">
-              <div class="list-group mb-3" id="candidateArea"></div>
-              <div class="d-flex gap-2">
-                <button id="btnCastVote" class="btn btn-success">Cast Vote</button>
-                <button id="btnCancelVote" class="btn btn-outline-secondary">Back</button>
-              </div>
-            </div>
-
-            <div id="evmLockedMsg" class="alert alert-secondary">EVM is locked. Authenticate to unlock.</div>
-          </div>
-
-          <!-- Step 5: VVPAT + Receipt -->
-          <div id="step-5" style="display:none;" class="mt-3">
-            <h5>5. VVPAT & QR Audit Slip</h5>
-            <div class="small-muted mb-2">VVPAT shows candidate name and cryptographic hash. QR encodes the vote hash (no PII).</div>
-
-            <div class="row">
-              <div class="col-md-6">
-                <div class="card p-3 mb-3">
-                  <strong>VVPAT Preview</strong>
-                  <div id="vvpat" class="mt-2"></div>
+                <div class="header">
+                    <h1>LAVIS</h1>
+                    <p>Layered Authentication Voting Integrity System</p>
+                    <small style="color: #FF6B35; font-weight: 600;">🇮🇳 Sashakt Matdaan Pranali for Saksham Bharat</small>
                 </div>
-                <div id="qrcode" class="mb-3"></div>
-                <div class="d-flex gap-2">
-                  <button id="btnFinish" class="btn btn-primary">Finish</button>
-                  <button id="btnViewLedger" class="btn btn-outline-secondary">View Ledger</button>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div id="ledgerView" style="display:none;">
-                  <h6>Local Ledger</h6>
-                  <pre id="ledgerPre" style="max-height:320px;overflow:auto;background:#f6f8ff;padding:12px;border-radius:8px;"></pre>
-                </div>
-              </div>
-            </div>
-          </div>
 
-        </div><!-- card -->
-      </div>
+                <div class="progress-steps">
+                    <div class="step active">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">ID Scan</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Fingerprint</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Iris Scan</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Vote</div>
+                    </div>
+                </div>
+
+                <div class="scanner-animation">
+                    <div class="scanner-circle">
+                        <div class="scanner-icon">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <div class="scanning-line"></div>
+                    </div>
+                </div>
+
+                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Please Scan Your Voter ID Card</h3>
+
+                <div class="input-group-custom">
+                    <label for="voterId"><i class="fas fa-id-badge"></i> Enter Voter ID Manually:</label>
+                    <input type="text" id="voterId" placeholder="Enter Voter ID (e.g., CDEFGAB123)" maxlength="20">
+                </div>
+
+                <button class="btn-custom btn-primary-custom" onclick="verifyVoterId()">
+                    <i class="fas fa-arrow-right me-2"></i> Proceed to Verification
+                </button>
+
+                <div class="info-box mt-4">
+                    <strong><i class="fas fa-info-circle"></i> Test Voter IDs:</strong><br>
+                    <small>
+                        • <strong>CDEFGAB123</strong> - Valid voter (Can vote)<br>
+                        • <strong>GABCDEFG123</strong> - Already voted<br>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 1.5: Voter Card Display -->
+        <div class="screen" id="screenVoterCard">
+            <div class="card-custom">
+                <div class="voter-card-display">
+                    <div class="voter-card">
+                        <div class="card-header-custom">
+                            <div class="election-commission-logo">
+                                <span class="eci-flag">🇮🇳</span>
+                                <div>
+                                    <div class="card-title-main">भारत निर्वाचन आयोग</div>
+                                    <div class="card-subtitle">ELECTION COMMISSION OF INDIA</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="voter-photo-section">
+                            <div class="voter-photo">
+                                <i class="fas fa-user" id="voterPhotoIcon"></i>
+                            </div>
+                            <div class="voter-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Name:</span>
+                                    <span class="detail-value" id="cardVoterName">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Father's Name:</span>
+                                    <span class="detail-value" id="cardFatherName">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Gender:</span>
+                                    <span class="detail-value" id="cardGender">Loading...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">DOB:</span>
+                                    <span class="detail-value" id="cardDOB">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="voter-id-highlight" id="cardVoterId">
+                            VOTER ID: LOADING...
+                        </div>
+
+                        <div class="card-footer-custom">
+                            <i class="fas fa-shield-alt"></i> Sample Smart Voter Card For Academic Purpose
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-message status-success">
+                    <h4><i class="fas fa-check-circle"></i> Voter ID Verified Successfully</h4>
+                    <p>Proceeding to biometric verification...</p>
+                </div>
+
+                <button class="btn-custom btn-primary-custom" onclick="proceedToFingerprint()">
+                    <i class="fas fa-fingerprint me-2"></i> Continue to Fingerprint Scan
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Fingerprint Verification -->
+        <div class="screen" id="screen2">
+            <div class="card-custom">
+                <div class="header">
+                    <h1>Biometric Verification</h1>
+                    <p>Step 2 of 3</p>
+                </div>
+
+                <div class="progress-steps">
+                    <div class="step completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">ID Scan</div>
+                    </div>
+                    <div class="step active">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Fingerprint</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Iris Scan</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Vote</div>
+                    </div>
+                </div>
+
+                <div id="voterInfo" class="status-message status-success">
+                    <h4><i class="fas fa-user-check"></i> Voter Details Confirmed</h4>
+                    <p id="voterName" style="font-size: 1.2rem; margin-top: 10px;">Name: Loading...</p>
+                    <p id="voterIdDisplay" style="font-size: 1.1rem;">ID: Loading...</p>
+                </div>
+
+                <div class="fingerprint-scanner">
+                    <i class="fas fa-fingerprint fingerprint-icon"></i>
+                </div>
+
+                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Place Your Finger on Mantra Scanner</h3>
+
+                <button class="btn-custom btn-primary-custom" onclick="simulateFingerprintScan()">
+                    <i class="fas fa-fingerprint me-2"></i> Authenticate Fingerprint
+                </button>
+
+                <div class="info-box mt-4">
+                    <strong><i class="fas fa-shield-alt"></i> Security Features:</strong><br>
+                    <small>✓ 256-bit AES Encryption<br>✓ Liveness Detection<br>✓ Anti-spoofing Technology</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Already Voted -->
+        <div class="screen" id="screen3">
+            <div class="card-custom">
+                <div class="header">
+                    <h1>Iris Verification</h1>
+                    <p>Step 3 of 4 - Advanced Biometric</p>
+                </div>
+
+                <div class="progress-steps">
+                    <div class="step completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">ID Scan</div>
+                    </div>
+                    <div class="step completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">Fingerprint</div>
+                    </div>
+                    <div class="step active">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Iris Scan</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Vote</div>
+                    </div>
+                </div>
+
+                <div class="status-message status-success">
+                    <h4><i class="fas fa-check-circle"></i> Fingerprint Verified Successfully</h4>
+                    <p id="irisVoterName" style="font-size: 1.1rem; margin-top: 10px;">Name: Loading...</p>
+                </div>
+
+                <div class="iris-scanner">
+                    <div class="iris-ring"></div>
+                    <i class="fas fa-eye iris-icon"></i>
+                </div>
+
+                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Look into the Iris Scanner</h3>
+
+                <button class="btn-custom btn-primary-custom" onclick="simulateIrisScan()">
+                    <i class="fas fa-eye me-2"></i> Authenticate Iris Pattern
+                </button>
+
+                <div class="info-box mt-4">
+                    <strong><i class="fas fa-shield-alt"></i> Triple-Layer Security:</strong><br>
+                    <small>✓ RFID Card Authentication<br>✓ Fingerprint Verification<br>✓ Iris Pattern Recognition</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Already Voted -->
+        <div class="screen" id="screenAlreadyVoted">
+            <div class="card-custom">
+                <div class="status-message status-warning">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 5rem; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2rem; font-weight: 700;">Already Voted!</h2>
+                    <p class="mt-3" style="font-size: 1.1rem;">Our records show that you have already cast your vote in this election.</p>
+                    <p id="votedInfo" class="mt-3" style="font-size: 1.1rem; font-weight: 600;"></p>
+                </div>
+
+                <div class="info-box mt-4" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-left-color: #ffc107;">
+                    <h5><i class="fas fa-info-circle"></i> Important Information:</h5>
+                    <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                        <li>✓ Each voter can vote only once per election</li>
+                        <li>✓ Your vote has been securely recorded in blockchain</li>
+                        <li>✓ Duplicate voting is prevented by biometric verification</li>
+                        <li>✓ Multiple voting attempts are logged for audit</li>
+                    </ul>
+                </div>
+
+                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
+                    <i class="fas fa-home me-2"></i> Return to Home
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 4: Voting Interface -->
+        <div class="screen" id="screen4">
+            <div class="card-custom">
+                <div class="header">
+                    <h1>Cast Your Vote</h1>
+                    <p>Step 3 of 3 - Choose Wisely!</p>
+                </div>
+
+                <div class="progress-steps">
+                    <div class="step completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">ID Scan</div>
+                    </div>
+                    <div class="step completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">Fingerprint</div>
+                    </div>
+                    <div class="step completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <div class="step-label">Iris Scan</div>
+                    </div>
+                    <div class="step active">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Vote</div>
+                    </div>
+                </div>
+
+                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Select Your Candidate</h3>
+
+                <div id="candidatesList">
+                    <div class="candidate-card" onclick="selectCandidate(1)">
+                        <div class="candidate-symbol">🪷</div>
+                        <div class="candidate-info">
+                            <h3>Bhartiya Jan Party</h3>
+                            <p>Symbol: Lotus | Candidate A</p>
+                        </div>
+                    </div>
+
+                    <div class="candidate-card" onclick="selectCandidate(2)">
+                        <div class="candidate-symbol">✋</div>
+                        <div class="candidate-info">
+                            <h3>National Congress</h3>
+                            <p>Symbol: Hand | Candidate B</p>
+                        </div>
+                    </div>
+
+                    <div class="candidate-card" onclick="selectCandidate(3)">
+                        <div class="candidate-symbol">🧹</div>
+                        <div class="candidate-info">
+                            <h3>Common People Party</h3>
+                            <p>Symbol: Broom | Candidate C</p>
+                        </div>
+                    </div>
+
+                    <div class="candidate-card" onclick="selectCandidate(4)">
+                        <div class="candidate-symbol">🌾</div>
+                        <div class="candidate-info">
+                            <h3>Farmer's Front</h3>
+                            <p>Symbol: Wheat | Candidate D</p>
+                        </div>
+                    </div>
+
+                    <div class="candidate-card" onclick="selectCandidate(5)">
+                        <div class="candidate-symbol">⚡</div>
+                        <div class="candidate-info">
+                            <h3>Independent</h3>
+                            <p>Symbol: Lightning | Candidate E</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-custom btn-primary-custom" id="castVoteBtn" disabled onclick="confirmVote()">
+                    <i class="fas fa-check-circle me-2"></i> Confirm & Cast Vote
+                </button>
+
+                <div class="info-box mt-4">
+                    <strong><i class="fas fa-lock"></i> Your Privacy is Protected:</strong><br>
+                    <small>✓ Anonymous voting<br>✓ End-to-end encryption<br>✓ Blockchain secured<br>✓ Cannot be traced to you</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Vote Success -->
+        <div class="screen" id="screen5">
+            <div class="card-custom">
+                <div class="success-animation">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2 style="font-size: 2.5rem; font-weight: 700; color: #28a745;">Vote Cast Successfully!</h2>
+                    <p class="mt-3" style="font-size: 1.2rem;">Thank you for participating in the democratic process of India.</p>
+                    <p id="voteConfirmation" class="mt-3" style="font-size: 1.1rem; font-weight: 600;"></p>
+                </div>
+
+                <div class="status-message status-success mt-4">
+                    <h5><i class="fas fa-shield-alt"></i> Your Vote is Secured with Blockchain</h5>
+                    <p class="mt-3" style="font-size: 1.05rem;">Your vote has been encrypted and recorded in the distributed ledger.</p>
+                    <p class="mt-2"><strong>Transaction ID:</strong> <span id="txId" style="font-family: monospace; background: #f0f0f0; padding: 5px 10px; border-radius: 5px;"></span></p>
+                    <p class="mt-2"><strong>Timestamp:</strong> <span id="txTime"></span></p>
+                </div>
+
+                <div class="info-box mt-4" style="background: linear-gradient(135deg, #d4edda, #c3e6cb); border-left-color: #28a745;">
+                    <h5><i class="fas fa-info-circle"></i> What Happens Next:</h5>
+                    <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                        <li>✓ Your vote is counted towards final results</li>
+                        <li>✓ Results announced after voting closes</li>
+                        <li>✓ Cannot vote again in this election</li>
+                        <li>✓ Audit trail maintained for transparency</li>
+                        <li>✓ QR code for verification generated</li>
+                    </ul>
+                </div>
+
+                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
+                    <i class="fas fa-home me-2"></i> Complete & Return to Home
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 6: User Not Registered -->
+        <div class="screen" id="screen6">
+            <div class="card-custom">
+                <div class="status-message status-error">
+                    <i class="fas fa-times-circle" style="font-size: 5rem; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2rem; font-weight: 700;">Voter Not Registered</h2>
+                    <p class="mt-3" style="font-size: 1.1rem;">The Voter ID you entered is not found in our database.</p>
+                    <p id="enteredId" class="mt-3" style="font-size: 1.2rem; font-weight: 700;"></p>
+                </div>
+
+                <div class="info-box mt-4" style="background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-left-color: #dc3545;">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Possible Reasons:</h5>
+                    <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                        <li>❌ Voter ID not registered in this constituency</li>
+                        <li>❌ Incorrect Voter ID entered or scanned</li>
+                        <li>❌ RFID card not linked to voter database</li>
+                        <li>❌ Registration pending or incomplete</li>
+                        <li>❌ Card may be fake or duplicate</li>
+                    </ul>
+                </div>
+
+                <div class="info-box mt-3" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-left-color: #ffc107;">
+                    <h5><i class="fas fa-lightbulb"></i> What You Should Do:</h5>
+                    <p class="mt-2" style="font-size: 1.05rem;">Please contact the Election Officer or visit the voter registration desk to register or verify your details. You can also visit <strong>nvsp.in</strong> for online registration.</p>
+                </div>
+
+                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
+                    <i class="fas fa-redo me-2"></i> Try Again with Different ID
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-<script>
-/* ============================
-   Enhanced EVM-like Voting Demo
-   ============================
-   - face-api.js for face recognition
-   - WebCrypto RSA-OAEP for encrypting vote (simulated authority)
-   - SHA-256 chain for tamper-evidence
-   - localStorage used to simulate DB/ledger
-   - Not production-grade; for demo/presentation only
-*/
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        // Enhanced voter database with detailed information from the cards
+        const voterDatabase = {
+            'CDEFGAB123': { 
+                name: 'Iron-Man', 
+                fatherName: 'Not Defined',
+                gender: 'Alien',
+                dob: '1/1/1970',
+                hasVoted: false, 
+                registered: true,
+                photo: '',
+                cardImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjIwMCIgeT0iMTI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlZvdGVyIENhcmQgSW1hZ2U8L3RleHQ+PC9zdmc+'
+            },
+            'GABCDEFG123': { 
+                name: 'Thano Dione', 
+                fatherName: 'M Dione',
+                gender: 'Male',
+                dob: '15/08/1970',
+                hasVoted: true, 
+                registered: true, 
+                votedAt: 'December 13, 2024 at 10:30 AM',
+                photo: '👨',
+                cardImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjIwMCIgeT0iMTI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlZvdGVyIENhcmQgSW1hZ2U8L3RleHQ+PC9zdmc+'
+            }
+        };
 
-const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models/'; // public demo models host
+        let currentVoterId = '';
+        let selectedCandidate = null;
 
-// Utility
-const $ = sel => document.querySelector(sel);
-const byId = id => document.getElementById(id);
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            
+            gsap.from(`#${screenId} .card-custom`, {
+                duration: 0.6,
+                y: 50,
+                opacity: 0,
+                ease: "power3.out"
+            });
+        }
 
-// Initial sample candidates
-const candidates = [
-  { id:'C1', name:'Candidate A', party:'Alpha' },
-  { id:'C2', name:'Candidate B', party:'Beta' },
-  { id:'C3', name:'Candidate C', party:'Gamma' }
-];
+        function verifyVoterId() {
+            const voterIdInput = document.getElementById('voterId').value.trim().toUpperCase();
+            
+            if (!voterIdInput) {
+                gsap.to('#voterId', {
+                    duration: 0.1,
+                    x: -10,
+                    repeat: 5,
+                    yoyo: true,
+                    ease: "power1.inOut",
+                    onComplete: () => {
+                        gsap.set('#voterId', { x: 0 });
+                    }
+                });
+                return;
+            }
 
-// Local storage keys
-const LS = {
-  LEDGER: 'lavis_ledger_v1',
-  TEMPLATE_PREFIX: 'lavis_template_', // + voterId
-  VOTED_PREFIX: 'lavis_voted_',       // + voterId
-  AUTHORITY_KEYS: 'lavis_authority_keys_v1' // stores publicKey (JWK) and privateKey (JWK) for demo
-};
+            currentVoterId = voterIdInput;
 
-// State
-let currentVoter = null;
-let refDescriptor = null; // Float32Array face descriptor
-let liveDescriptor = null;
-let cameraStream = null;
-let authorityPublicKey = null;
-let authorityPrivateKey = null;
+            // Enhanced RFID scanning animation
+            gsap.to('.scanner-circle', {
+                duration: 0.3,
+                scale: 1.3,
+                borderColor: '#4CAF50',
+                repeat: 3,
+                yoyo: true,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    checkVoterStatus();
+                }
+            });
 
-// --- Initialize UI & models ---
-async function init(){
-  // populate candidate UI
-  const area = $('#candidateArea');
-  candidates.forEach(c=>{
-    const btn = document.createElement('button');
-    btn.type='button';
-    btn.className='list-group-item list-group-item-action';
-    btn.dataset.id = c.id;
-    btn.innerHTML = `<div class="d-flex w-100 justify-content-between"><div><strong>${c.name}</strong><div class="small-muted">${c.party}</div></div><small>${c.id}</small></div>`;
-    btn.onclick = ()=> {
-      document.querySelectorAll('#candidateArea .list-group-item').forEach(x=>x.classList.remove('active'));
-      btn.classList.add('active');
-    };
-    area.appendChild(btn);
-  });
+            // Scanning line animation
+            gsap.to('.scanning-line', {
+                duration: 1,
+                top: '100%',
+                ease: "power1.inOut"
+            });
+        }
 
-  // ensure ledger exists
-  if(!localStorage.getItem(LS.LEDGER)) localStorage.setItem(LS.LEDGER, JSON.stringify([]));
+        function checkVoterStatus() {
+            const voter = voterDatabase[currentVoterId];
 
-  // load or generate authority keypair (simulate Election Authority RSA key)
-  await ensureAuthorityKeypair();
+            if (!voter || !voter.registered) {
+                document.getElementById('enteredId').innerHTML = `<i class="fas fa-id-card"></i> ID: <strong>${currentVoterId}</strong>`;
+                showScreen('screen6');
+            } else {
+                displayVoterCard(voter);
+            }
+        }
 
-  // load face-api models
-  await Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-  ]);
+        function displayVoterCard(voter) {
+            document.getElementById('cardVoterName').textContent = voter.name;
+            document.getElementById('cardFatherName').textContent = voter.fatherName;
+            document.getElementById('cardGender').textContent = voter.gender;
+            document.getElementById('cardDOB').textContent = voter.dob;
+            document.getElementById('cardVoterId').textContent = `VOTER ID: ${currentVoterId}`;
+            document.getElementById('voterPhotoIcon').textContent = voter.photo;
+            
+            showScreen('screenVoterCard');
 
-  $('#modelsNotice').classList.remove('alert-info');
-  $('#modelsNotice').classList.add('alert-success');
-  $('#modelsNotice').textContent = 'Models ready. You can begin the flow.';
-  gsap.from('#modelsNotice', {y:-10, opacity:0, duration:0.6});
-}
-init().catch(err=>{ console.error(err); $('#modelsNotice').textContent='Model load failed: '+err.message; });
+            // Animate voter card
+            gsap.from('.voter-card', {
+                duration: 1,
+                rotateY: 90,
+                opacity: 0,
+                ease: "back.out(1.7)"
+            });
+        }
 
-// -------------------------- Authority keypair (WebCrypto) --------------------------
-async function ensureAuthorityKeypair(){
-  const saved = localStorage.getItem(LS.AUTHORITY_KEYS);
-  if(saved){
-    try{
-      const obj = JSON.parse(saved);
-      authorityPublicKey = await crypto.subtle.importKey('jwk', obj.publicKey, {name:'RSA-OAEP', hash:'SHA-256'}, true, ['encrypt']);
-      authorityPrivateKey = await crypto.subtle.importKey('jwk', obj.privateKey, {name:'RSA-OAEP', hash:'SHA-256'}, true, ['decrypt']);
-      console.log('Loaded authority keys from storage.');
-      return;
-    }catch(e){ console.warn('Failed to import stored keys, will generate new.'); }
-  }
-  // generate new
-  const kp = await crypto.subtle.generateKey(
-    { name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: 'SHA-256' },
-    true,
-    ['encrypt','decrypt']
-  );
-  const pubJwk = await crypto.subtle.exportKey('jwk', kp.publicKey);
-  const privJwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
-  localStorage.setItem(LS.AUTHORITY_KEYS, JSON.stringify({ publicKey: pubJwk, privateKey: privJwk }));
-  authorityPublicKey = kp.publicKey;
-  authorityPrivateKey = kp.privateKey;
-  console.log('Generated new authority keypair for demo.');
-}
+        function proceedToFingerprint() {
+            const voter = voterDatabase[currentVoterId];
+            document.getElementById('voterName').innerHTML = `<strong>Name:</strong> ${voter.name}`;
+            document.getElementById('voterIdDisplay').innerHTML = `<strong>ID:</strong> ${currentVoterId}`;
+            showScreen('screen2');
+        }
 
-// -------------------------- Helpers: ledger & hashing --------------------------
-async function sha256hex(str){
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
-  const arr = Array.from(new Uint8Array(buf));
-  return arr.map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-function getLedger(){ return JSON.parse(localStorage.getItem(LS.LEDGER) || '[]'); }
-function saveLedger(ledger){ localStorage.setItem(LS.LEDGER, JSON.stringify(ledger)); }
+        function simulateFingerprintScan() {
+            const voter = voterDatabase[currentVoterId];
 
-// -------------------------- UI Actions --------------------------
-$('#btnLoadSample').addEventListener('click', ()=> {
-  $('#voterInput').value = 'VOTER_1001';
-});
+            // Enhanced fingerprint animation
+            const tl = gsap.timeline();
+            
+            tl.to('.fingerprint-icon', {
+                duration: 0.2,
+                scale: 1.3,
+                repeat: 8,
+                yoyo: true,
+                ease: "power2.inOut"
+            })
+            .to('.fingerprint-scanner', {
+                duration: 0.3,
+                boxShadow: '0 20px 60px rgba(40, 167, 69, 0.6)',
+                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                onComplete: () => {
+                    if (voter.hasVoted) {
+                        document.getElementById('votedInfo').innerHTML = 
+                            `<i class="fas fa-calendar-check"></i> You voted on: <strong>${voter.votedAt}</strong>`;
+                        showScreen('screenAlreadyVoted');
+                    } else {
+                        // Proceed to iris scan
+                        document.getElementById('irisVoterName').innerHTML = `<strong>Name:</strong> ${voter.name}`;
+                        showScreen('screen3');
+                    }
+                }
+            });
+        }
 
-$('#btnStartAuth').addEventListener('click', async ()=>{
-  const id = $('#voterInput').value.trim();
-  if(!id){ $('#voterStatus').innerHTML = '<span class="text-danger">Enter a Voter ID.</span>'; return; }
-  currentVoter = id;
-  $('#voterStatus').innerHTML = `<span class="text-primary">Voter "${id}" inserted. Checking template...</span>`;
+        function simulateIrisScan() {
+            const voter = voterDatabase[currentVoterId];
 
-  // if already voted -> block
-  if(localStorage.getItem(LS.VOTED_PREFIX + id)){
-    $('#voterStatus').innerHTML = `<span class="text-danger">This voter has already voted — EVM locked.</span>`;
-    return;
-  }
+            // Enhanced iris animation
+            const tl = gsap.timeline();
+            
+            tl.to('.iris-icon', {
+                duration: 0.25,
+                scale: 1.2,
+                repeat: 8,
+                yoyo: true,
+                ease: "power2.inOut"
+            })
+            .to('.iris-ring', {
+                duration: 0.5,
+                scale: 1.3,
+                borderColor: 'rgba(40, 167, 69, 0.8)',
+                borderWidth: '6px'
+            })
+            .to('.iris-scanner', {
+                duration: 0.4,
+                boxShadow: '0 20px 60px rgba(40, 167, 69, 0.8)',
+                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                onComplete: () => {
+                    showScreen('screen4');
+                }
+            });
+        }
 
-  // check for stored reference template
-  const saved = localStorage.getItem(LS.TEMPLATE_PREFIX + id);
-  if(saved){
-    // load template image and its descriptor
-    const obj = JSON.parse(saved);
-    const desc = new Float32Array(Object.values(obj.descriptor));
-    refDescriptor = desc;
-    // draw preview
-    const img = new Image();
-    img.onload = ()=> {
-      const c = $('#refCanvas'); const ctx = c.getContext('2d');
-      ctx.clearRect(0,0,c.width,c.height);
-      ctx.drawImage(img,0,0,c.width,c.height);
-      $('#voterStatus').innerHTML = `<span class="text-success">Template found. Proceed to live verification.</span>`;
-      showStep(3);
-    };
-    img.src = obj.dataUrl;
-  } else {
-    // no template registered — ask to register
-    $('#voterStatus').innerHTML = `<span class="text-warning">No template registered for this ID. Please register a reference photo.</span>`;
-    showStep(2);
-  }
-});
+        function selectCandidate(candidateId) {
+            selectedCandidate = candidateId;
+            
+            document.querySelectorAll('.candidate-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            event.currentTarget.classList.add('selected');
+            document.getElementById('castVoteBtn').disabled = false;
+            
+            gsap.fromTo(event.currentTarget, 
+                { scale: 0.95 },
+                { 
+                    duration: 0.4,
+                    scale: 1.05,
+                    ease: "back.out(3)"
+                }
+            );
+        }
 
-// Register reference template by upload
-$('#refFile').addEventListener('change', async (ev)=>{
-  const f = ev.target.files[0];
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = async ()=>{
-    // draw to canvas small and compute descriptor
-    const canvas = $('#refCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-    const single = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-    if(!single){ alert('No face detected in reference image. Use a clear frontal image.'); return; }
-    refDescriptor = single.descriptor;
-    // Save template to localStorage (dataURL + descriptor numeric array)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    const payload = { dataUrl, descriptor: Array.from(refDescriptor) };
-    localStorage.setItem(LS.TEMPLATE_PREFIX + currentVoter, JSON.stringify(payload));
-    $('#voterStatus').innerHTML = `<span class="text-success">Reference template saved for ${currentVoter}. Proceed to live verification.</span>`;
-  };
-  img.src = url;
-});
+        function confirmVote() {
+            if (!selectedCandidate) {
+                gsap.to('#castVoteBtn', {
+                    duration: 0.1,
+                    x: -5,
+                    repeat: 5,
+                    yoyo: true
+                });
+                return;
+            }
 
-$('#btnUseCameraRef').addEventListener('click', async ()=>{
-  // start camera, capture a frame into refCanvas as template
-  await startCamera();
-  alert('Camera started — click "Capture" in live verification to use current frame as reference, then click "Save as Reference" in the UI.');
-  // show step-3 camera UI and instruct user to capture then save as reference
-  showStep(3);
-});
+            const candidateNames = [
+                'Nobitas National Party (🪷 Lotus)',
+                'National Congress (✋ Hand)',
+                'Common People Party (🧹 Broom)',
+                'Farmer\'s Front (🌾 Wheat)',
+                'Independent (⚡ Lightning)'
+            ];
+            const candidateName = candidateNames[selectedCandidate - 1];
 
-// Proceed to camera verification
-$('#btnProceedCam').addEventListener('click', ()=> showStep(3));
+            const txId = 'LAVIS' + Date.now() + Math.floor(Math.random() * 10000);
+            const timestamp = new Date().toLocaleString('en-IN', { 
+                timeZone: 'Asia/Kolkata',
+                dateStyle: 'long',
+                timeStyle: 'short'
+            });
 
-// Start camera
-async function startCamera(){
-  try{
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-    $('#video').srcObject = cameraStream;
-  }catch(e){ alert('Camera access required: ' + e.message); }
-}
+            voterDatabase[currentVoterId].hasVoted = true;
+            voterDatabase[currentVoterId].votedAt = timestamp;
 
-// Capture live frame
-$('#btnCaptureLive').addEventListener('click', async ()=>{
-  if(!cameraStream){ await startCamera(); }
-  const v = $('#video');
-  const canvas = $('#liveCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(v, 0,0, canvas.width, canvas.height);
-  $('#matchResult').textContent = 'Captured. Running recognition...';
-  // detect face & descriptor
-  const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-  if(!detection){ $('#matchResult').innerHTML = '<span class="text-danger">No face detected. Try again.</span>'; return; }
-  liveDescriptor = detection.descriptor;
-  // if no reference yet and user wants to treat this as reference (when came from Use Camera Ref)
-  const maybeSaveRef = !refDescriptor && confirm('No reference template found. Save this capture as reference template for this voter? (OK = save)');
-  if(maybeSaveRef){
-    refDescriptor = liveDescriptor;
-    const c = $('#refCanvas'); const ctxRef = c.getContext('2d');
-    ctxRef.drawImage($('#liveCanvas'),0,0,c.width,c.height);
-    const dataUrl = c.toDataURL('image/jpeg',0.85);
-    const payload = { dataUrl, descriptor: Array.from(refDescriptor) };
-    localStorage.setItem(LS.TEMPLATE_PREFIX + currentVoter, JSON.stringify(payload));
-    $('#voterStatus').innerHTML = `<span class="text-success">Reference captured & saved for ${currentVoter}.</span>`;
-  }
-  // if we already have refDescriptor, compute distance
-  if(refDescriptor){
-    const dist = faceapi.euclideanDistance(refDescriptor, liveDescriptor);
-    $('#matchResult').innerHTML = `Match distance: <strong>${dist.toFixed(3)}</strong> (threshold demo: 0.55)`;
-    if(dist <= 0.55){
-      $('#matchResult').innerHTML += ' — <span class="text-success">Verified</span>';
-      // unlock EVM
-      unlockEVMForVoter(currentVoter);
-    } else {
-      $('#matchResult').innerHTML += ' — <span class="text-danger">Mismatch</span>';
-    }
-  }
-});
+            document.getElementById('voteConfirmation').innerHTML = 
+                `<i class="fas fa-user-check"></i> <strong>Voter:</strong> ${voterDatabase[currentVoterId].name}<br>
+                 <i class="fas fa-vote-yea"></i> <strong>Voted For:</strong> ${candidateName}`;
+            document.getElementById('txId').textContent = txId;
+            document.getElementById('txTime').textContent = timestamp;
 
-// Retry: clear live canvas
-$('#btnRetryCapture').addEventListener('click', ()=> {
-  const c = $('#liveCanvas'); c.getContext('2d').clearRect(0,0,c.width,c.height);
-  $('#matchResult').textContent = '';
-});
+            showScreen('screen5');
 
-// unlockEVM: create ephemeral session token and reveal EVM
-async function unlockEVMForVoter(voterId){
-  // create a one-time session token (random)
-  const token = crypto.getRandomValues(new Uint8Array(16));
-  const tokenHex = Array.from(token).map(b=>b.toString(16).padStart(2,'0')).join('');
-  // show unlocked UI
-  $('#evmLockStatus').textContent = 'Unlocked';
-  $('#evmLockStatus').className = 'status-pill bg-success text-white';
-  $('#evmLockedMsg').style.display = 'none';
-  $('#evmScreen').style.display = 'block';
-  $('#evmLockedMsg').style.display = 'none';
-  // show step 4
-  $('#step-3').style.display = 'none';
-  $('#step-4').style.display = 'block';
-  gsap.from('#step-4', { y: 12, opacity:0, duration:0.5 });
-  // store ephemeral to state (for demo only)
-  window._lavis_session = { voterId, token: tokenHex, expires: Date.now() + (5*60*1000) }; // 5 min session
-}
+            gsap.from('.success-icon', {
+                duration: 0.8,
+                scale: 0,
+                rotation: 360,
+                ease: "back.out(2)"
+            });
 
-// Cast vote
-$('#btnCastVote').addEventListener('click', async ()=>{
-  // ensure session unlocked
-  if(!window._lavis_session || window._lavis_session.voterId !== currentVoter){
-    alert('EVM not unlocked for this voter.');
-    return;
-  }
-  // check double-vote
-  if(localStorage.getItem(LS.VOTED_PREFIX + currentVoter)){
-    alert('This voter already cast a vote. EVM locked.');
-    return;
-  }
-  const chosen = document.querySelector('#candidateArea .active');
-  if(!chosen){ alert('Select candidate'); return; }
-  const candidateId = chosen.dataset.id;
-  const candidate = candidates.find(c=>c.id===candidateId);
-  // build plaintext record (we won't store voterId plaintext on VVPAT)
-  const timestamp = new Date().toISOString();
-  const recordPlain = JSON.stringify({ candidateId, timestamp, session: window._lavis_session.token });
-  // encrypt vote with authority public key
-  const enc = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, authorityPublicKey, new TextEncoder().encode(recordPlain));
-  const encB64 = arrayBufferToBase64(enc);
-  // compute previous hash and new hash chain entry
-  const ledger = getLedger();
-  const prevHash = ledger.length ? ledger[ledger.length-1].voteHash : 'GENESIS';
-  const voteHash = await sha256hex(prevHash + '|' + encB64);
-  const entry = { voteHash, encrypted: encB64, previousHash: prevHash, timestamp };
-  ledger.push(entry);
-  saveLedger(ledger);
-  // mark voter as voted (store hashed id to avoid raw PII)
-  sha256hex(currentVoter).then(h=>{
-    localStorage.setItem(LS.VOTED_PREFIX + currentVoter, JSON.stringify({ votedAt: timestamp, voterHash: h }));
-  });
-  // Show VVPAT and QR
-  $('#vvpat').innerHTML = `<div><strong>VVPAT</strong><div>Candidate: <strong>${candidate.name}</strong></div><div>Time: ${timestamp}</div><div>Vote Hash: <small>${voteHash}</small></div></div>`;
-  document.getElementById('qrcode').innerHTML = '';
-  new QRCode(document.getElementById('qrcode'), { text: voteHash, width:160, height:160 });
-  // Show step 5
-  $('#evmScreen').style.display = 'none';
-  $('#step-5').style.display = 'block';
-  $('#evmLockedMsg').style.display = 'none';
-  $('#evmLockStatus').textContent = 'Locked';
-  $('#evmLockStatus').className = 'status-pill bg-warning text-dark';
-  // stop camera to free resource
-  stopCamera();
-  gsap.from('#step-5', { y:12, opacity:0, duration:0.5 });
-});
+            // Confetti effect
+            for(let i = 0; i < 50; i++) {
+                createConfetti();
+            }
+        }
 
-// Cancel vote: go back to camera
-$('#btnCancelVote').addEventListener('click', ()=> {
-  // relock and return to verification
-  $('#evmScreen').style.display = 'none';
-  $('#step-3').style.display = 'block';
-  $('#evmLockStatus').textContent = 'Locked';
-  $('#evmLockStatus').className = 'status-pill bg-warning text-dark';
-});
+        function createConfetti() {
+            const colors = ['#FF6B35', '#F7931E', '#28a745', '#2196F3', '#ffc107'];
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.top = '-10px';
+            confetti.style.opacity = '1';
+            confetti.style.borderRadius = '50%';
+            document.body.appendChild(confetti);
 
-// Finish flow
-$('#btnFinish').addEventListener('click', ()=> {
-  alert('Vote recorded locally in ledger. Demo finished.');
-  location.reload();
-});
+            gsap.to(confetti, {
+                duration: 2 + Math.random() * 2,
+                y: window.innerHeight + 10,
+                x: (Math.random() - 0.5) * 200,
+                rotation: Math.random() * 360,
+                opacity: 0,
+                ease: "power1.in",
+                onComplete: () => {
+                    confetti.remove();
+                }
+            });
+        }
 
-// View ledger
-$('#btnViewLedger').addEventListener('click', ()=>{
-  const ledgerDiv = $('#ledgerView');
-  ledgerDiv.style.display = ledgerDiv.style.display === 'none' ? 'block' : 'none';
-  $('#ledgerPre').textContent = JSON.stringify(getLedger(), null, 2);
-});
+        function resetToStart() {
+            currentVoterId = '';
+            selectedCandidate = null;
+            document.getElementById('voterId').value = '';
+            document.getElementById('castVoteBtn').disabled = true;
+            showScreen('screen1');
+        }
 
-// Stop camera
-function stopCamera(){
-  if(cameraStream){ cameraStream.getTracks().forEach(t=>t.stop()); cameraStream = null; $('#video').srcObject = null; }
-}
+        // Initial animations
+        gsap.from('.logo', {
+            duration: 1.2,
+            scale: 0,
+            rotation: 360,
+            ease: "back.out(2)"
+        });
 
-// Helper: arrayBuffer => base64
-function arrayBufferToBase64(buffer){
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for(let i=0;i<bytes.byteLength;i++){
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+        gsap.from('.header h1', {
+            duration: 0.8,
+            y: -30,
+            opacity: 0,
+            delay: 0.3,
+            ease: "power2.out"
+        });
 
-// Show step helper
-function showStep(n){
-  // n = 2 -> show step-2 etc
-  document.getElementById('step-2').style.display = (n===2)?'block':'none';
-  document.getElementById('step-3').style.display = (n===3)?'block':'none';
-  document.getElementById('step-4').style.display = (n===4)?'block':'none';
-}
-
-// beforeunload stop camera
-window.addEventListener('beforeunload', ()=> stopCamera());
-
-</script>
+        // Continuous scanner animation
+        gsap.to('.scanning-line', {
+            duration: 2,
+            top: '100%',
+            repeat: -1,
+            ease: "power1.inOut"
+        });
+    </script>
 </body>
 </html>
