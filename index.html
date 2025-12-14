@@ -95,7 +95,7 @@
             font-size: 1.1rem;
         }
 
-        .input-group-custom input {
+        .input-group-custom select {
             width: 100%;
             padding: 18px;
             border: 3px solid #e0e0e0;
@@ -103,10 +103,17 @@
             font-size: 1.2rem;
             transition: all 0.3s;
             font-weight: 600;
-            letter-spacing: 1px;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23FF6B35' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 24px;
+            padding-right: 50px;
         }
 
-        .input-group-custom input:focus {
+        .input-group-custom select:focus {
             outline: none;
             border-color: #FF6B35;
             box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
@@ -133,9 +140,15 @@
             box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
         }
 
-        .btn-primary-custom:hover {
+        .btn-primary-custom:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-primary-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #ccc;
         }
 
         .scanner-animation {
@@ -206,57 +219,6 @@
             background: linear-gradient(135deg, #fff3cd, #ffeaa7);
             color: #856404;
             border: 3px solid #ffc107;
-        }
-
-        .candidate-card {
-            border: 4px solid #e0e0e0;
-            border-radius: 20px;
-            padding: 25px;
-            margin: 20px 0;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            background: linear-gradient(135deg, #f8f9fa, #ffffff);
-        }
-
-        .candidate-card:hover {
-            border-color: #FF6B35;
-            transform: translateX(15px) scale(1.02);
-            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
-        }
-
-        .candidate-card.selected {
-            border-color: #FF6B35;
-            background: linear-gradient(135deg, #fff5f2, #ffe8e0);
-            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.4);
-            transform: scale(1.05);
-        }
-
-        .candidate-symbol {
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .candidate-info h3 {
-            margin: 0;
-            color: #333;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .candidate-info p {
-            margin: 8px 0 0 0;
-            color: #666;
-            font-size: 1.1rem;
         }
 
         .progress-steps {
@@ -423,7 +385,6 @@
             box-shadow: 0 5px 15px rgba(33, 150, 243, 0.1);
         }
 
-        /* Voter Card Styles */
         .voter-card-display {
             max-width: 600px;
             margin: 30px auto;
@@ -557,11 +518,6 @@
                 font-size: 2rem;
             }
 
-            .candidate-card {
-                flex-direction: column;
-                text-align: center;
-            }
-
             .voter-photo-section {
                 flex-direction: column;
                 align-items: center;
@@ -570,12 +526,19 @@
             .detail-row {
                 flex-direction: column;
             }
-        }
 
-        .indian-flag-bg {
-            background: linear-gradient(to bottom, #FF9933 33%, white 33%, white 66%, #138808 66%);
-            padding: 2px;
-            border-radius: 5px;
+            .progress-steps {
+                flex-wrap: wrap;
+            }
+
+            .step {
+                flex-basis: 50%;
+                margin-bottom: 20px;
+            }
+
+            .progress-steps::before {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -606,10 +569,6 @@
                         <div class="step-circle">3</div>
                         <div class="step-label">Iris Scan</div>
                     </div>
-                    <div class="step">
-                        <div class="step-circle">4</div>
-                        <div class="step-label">Vote</div>
-                    </div>
                 </div>
 
                 <div class="scanner-animation">
@@ -624,25 +583,368 @@
                 <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Please Scan Your Voter ID Card</h3>
 
                 <div class="input-group-custom">
-                    <label for="voterId"><i class="fas fa-id-badge"></i> Enter Voter ID Manually:</label>
-                    <input type="text" id="voterId" placeholder="Enter Voter ID (e.g., CDEFGAB123)" maxlength="20">
+                    <label for="voterId"><i class="fas fa-id-badge"></i> Select Voter ID:</label>
+                    <select id="voterId">
+                        <option value="">-- Select Voter ID --</option>
+                        <option value="CDEFGAB123">CDEFGAB123</option>
+                        <option value="GABCDEFG123">GABCDEFG123</option>
+                    </select>
                 </div>
 
-                <button class="btn-custom btn-primary-custom" onclick="verifyVoterId()">
+                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
+                    <i class="fas fa-home me-2"></i> Complete & Return to Home
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 7: User Not Registered -->
+        <div class="screen" id="screen6">
+            <div class="card-custom">
+                <div class="status-message status-error">
+                    <i class="fas fa-times-circle" style="font-size: 5rem; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2rem; font-weight: 700;">Voter Not Registered</h2>
+                    <p class="mt-3" style="font-size: 1.1rem;">The Voter ID you selected is not found in our database.</p>
+                    <p id="enteredId" class="mt-3" style="font-size: 1.2rem; font-weight: 700;"></p>
+                </div>
+
+                <div class="info-box mt-4" style="background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-left-color: #dc3545;">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Possible Reasons:</h5>
+                    <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                        <li>✗ Voter ID not registered in this constituency</li>
+                        <li>✗ Incorrect Voter ID selected</li>
+                        <li>✗ RFID card not linked to voter database</li>
+                        <li>✗ Registration pending or incomplete</li>
+                    </ul>
+                </div>
+
+                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
+                    <i class="fas fa-redo me-2"></i> Try Again with Different ID
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        const voterDatabase = {
+            'CDEFGAB123': { 
+                name: 'Iron-Man', 
+                fatherName: 'Not Defined',
+                gender: 'Alien',
+                dob: '1/1/1970',
+                hasVoted: false, 
+                registered: true
+            },
+            'GABCDEFG123': { 
+                name: 'Thano Dione', 
+                fatherName: 'M Dione',
+                gender: 'Male',
+                dob: '15/08/1970',
+                hasVoted: true, 
+                registered: true, 
+                votedAt: 'December 13, 2024 at 10:30 AM'
+            }
+        };
+
+        let currentVoterId = '';
+
+        // Keyboard navigation and event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const voterIdSelect = document.getElementById('voterId');
+            const proceedBtn = document.getElementById('proceedBtn');
+            
+            // Enable button when voter ID is selected
+            voterIdSelect.addEventListener('change', function() {
+                proceedBtn.disabled = !this.value;
+                if (this.value) {
+                    proceedBtn.focus();
+                }
+            });
+
+            // Enter key on dropdown
+            voterIdSelect.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && this.value) {
+                    e.preventDefault();
+                    verifyVoterId();
+                }
+            });
+
+            // Arrow key navigation
+            voterIdSelect.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    setTimeout(() => {
+                        proceedBtn.disabled = !this.value;
+                    }, 0);
+                }
+            });
+
+            // Enter key on all buttons
+            document.querySelectorAll('.btn-custom').forEach(btn => {
+                btn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !this.disabled) {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+
+            // Initial focus
+            voterIdSelect.focus();
+        });
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            
+            gsap.from(`#${screenId} .card-custom`, {
+                duration: 0.6,
+                y: 50,
+                opacity: 0,
+                ease: "power3.out"
+            });
+
+            // Focus first button after animation
+            setTimeout(() => {
+                const firstButton = document.querySelector(`#${screenId} .btn-custom`);
+                if (firstButton) firstButton.focus();
+            }, 600);
+        }
+
+        function verifyVoterId() {
+            const voterIdSelect = document.getElementById('voterId');
+            const voterIdValue = voterIdSelect.value.trim().toUpperCase();
+            
+            if (!voterIdValue) {
+                gsap.to(voterIdSelect, {
+                    duration: 0.1,
+                    x: -10,
+                    repeat: 5,
+                    yoyo: true,
+                    ease: "power1.inOut",
+                    onComplete: () => {
+                        gsap.set(voterIdSelect, { x: 0 });
+                    }
+                });
+                return;
+            }
+
+            currentVoterId = voterIdValue;
+
+            // Scanning animation
+            gsap.to('.scanner-circle', {
+                duration: 0.3,
+                scale: 1.3,
+                borderColor: '#4CAF50',
+                repeat: 3,
+                yoyo: true,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    checkVoterStatus();
+                }
+            });
+
+            gsap.to('.scanning-line', {
+                duration: 1,
+                top: '100%',
+                ease: "power1.inOut"
+            });
+        }
+
+        function checkVoterStatus() {
+            const voter = voterDatabase[currentVoterId];
+
+            if (!voter || !voter.registered) {
+                document.getElementById('enteredId').innerHTML = `<i class="fas fa-id-card"></i> ID: <strong>${currentVoterId}</strong>`;
+                showScreen('screen6');
+            } else {
+                displayVoterCard(voter);
+            }
+        }
+
+        function displayVoterCard(voter) {
+            document.getElementById('cardVoterName').textContent = voter.name;
+            document.getElementById('cardFatherName').textContent = voter.fatherName;
+            document.getElementById('cardGender').textContent = voter.gender;
+            document.getElementById('cardDOB').textContent = voter.dob;
+            document.getElementById('cardVoterId').textContent = `VOTER ID: ${currentVoterId}`;
+            
+            showScreen('screenVoterCard');
+
+            gsap.from('.voter-card', {
+                duration: 1,
+                rotateY: 90,
+                opacity: 0,
+                ease: "back.out(1.7)"
+            });
+        }
+
+        function proceedToFingerprint() {
+            const voter = voterDatabase[currentVoterId];
+            document.getElementById('voterName').innerHTML = `<strong>Name:</strong> ${voter.name}`;
+            document.getElementById('voterIdDisplay').innerHTML = `<strong>ID:</strong> ${currentVoterId}`;
+            showScreen('screen2');
+        }
+
+        function simulateFingerprintScan() {
+            const voter = voterDatabase[currentVoterId];
+            const tl = gsap.timeline();
+            
+            tl.to('.fingerprint-icon', {
+                duration: 0.2,
+                scale: 1.3,
+                repeat: 8,
+                yoyo: true,
+                ease: "power2.inOut"
+            })
+            .to('.fingerprint-scanner', {
+                duration: 0.3,
+                boxShadow: '0 20px 60px rgba(40, 167, 69, 0.6)',
+                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                onComplete: () => {
+                    if (voter.hasVoted) {
+                        document.getElementById('votedInfo').innerHTML = 
+                            `<i class="fas fa-calendar-check"></i> You voted on: <strong>${voter.votedAt}</strong>`;
+                        showScreen('screenAlreadyVoted');
+                    } else {
+                        document.getElementById('irisVoterName').innerHTML = `<strong>Name:</strong> ${voter.name}`;
+                        showScreen('screen3');
+                    }
+                }
+            });
+        }
+
+        function simulateIrisScan() {
+            const voter = voterDatabase[currentVoterId];
+            const tl = gsap.timeline();
+            
+            tl.to('.iris-icon', {
+                duration: 0.25,
+                scale: 1.2,
+                repeat: 8,
+                yoyo: true,
+                ease: "power2.inOut"
+            })
+            .to('.iris-ring', {
+                duration: 0.5,
+                scale: 1.3,
+                borderColor: 'rgba(40, 167, 69, 0.8)',
+                borderWidth: '6px'
+            })
+            .to('.iris-scanner', {
+                duration: 0.4,
+                boxShadow: '0 20px 60px rgba(40, 167, 69, 0.8)',
+                background: 'linear-gradient(135deg, #28a745, #20c997)',
+                onComplete: () => {
+                    document.getElementById('successVoterName').innerHTML = 
+                        `<i class="fas fa-user-check"></i> <strong>Voter:</strong> ${voter.name} (${currentVoterId})`;
+                    showScreen('screenSuccess');
+                    
+                    gsap.from('.success-icon', {
+                        duration: 0.8,
+                        scale: 0,
+                        rotation: 360,
+                        ease: "back.out(2)"
+                    });
+
+                    // Confetti animation
+                    for(let i = 0; i < 50; i++) {
+                        createConfetti();
+                    }
+                }
+            });
+        }
+
+        function createConfetti() {
+            const colors = ['#FF6B35', '#F7931E', '#28a745', '#2196F3', '#ffc107'];
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.top = '-10px';
+            confetti.style.opacity = '1';
+            confetti.style.borderRadius = '50%';
+            confetti.style.zIndex = '9999';
+            confetti.style.pointerEvents = 'none';
+            document.body.appendChild(confetti);
+
+            gsap.to(confetti, {
+                duration: 2 + Math.random() * 2,
+                y: window.innerHeight + 10,
+                x: (Math.random() - 0.5) * 200,
+                rotation: Math.random() * 360,
+                opacity: 0,
+                ease: "power1.in",
+                onComplete: () => {
+                    confetti.remove();
+                }
+            });
+        }
+
+        function resetToStart() {
+            currentVoterId = '';
+            document.getElementById('voterId').value = '';
+            document.getElementById('proceedBtn').disabled = true;
+            showScreen('screen1');
+            
+            setTimeout(() => {
+                document.getElementById('voterId').focus();
+            }, 600);
+        }
+
+        // Initial page load animations
+        window.addEventListener('load', function() {
+            gsap.from('.logo', {
+                duration: 1.2,
+                scale: 0,
+                rotation: 360,
+                ease: "back.out(2)"
+            });
+
+            gsap.from('.header h1', {
+                duration: 0.8,
+                y: -30,
+                opacity: 0,
+                delay: 0.3,
+                ease: "power2.out"
+            });
+
+            gsap.from('.header p', {
+                duration: 0.8,
+                y: -20,
+                opacity: 0,
+                delay: 0.5,
+                ease: "power2.out"
+            });
+
+            // Continuous scanner animation
+            gsap.to('.scanning-line', {
+                duration: 2,
+                top: '100%',
+                repeat: -1,
+                ease: "power1.inOut"
+            });
+        });
+    </script>
+</body>
+</html>primary-custom" id="proceedBtn" disabled onclick="verifyVoterId()">
                     <i class="fas fa-arrow-right me-2"></i> Proceed to Verification
                 </button>
 
                 <div class="info-box mt-4">
                     <strong><i class="fas fa-info-circle"></i> Test Voter IDs:</strong><br>
                     <small>
-                        • <strong>CDEFGAB123</strong> - Valid voter (Can vote)<br>
+                        • <strong>CDEFGAB123</strong> - Valid voter (Can proceed)<br>
                         • <strong>GABCDEFG123</strong> - Already voted<br>
                     </small>
                 </div>
             </div>
         </div>
 
-        <!-- Screen 1.5: Voter Card Display -->
+        <!-- Screen 2: Voter Card Display -->
         <div class="screen" id="screenVoterCard">
             <div class="card-custom">
                 <div class="voter-card-display">
@@ -652,14 +954,14 @@
                                 <span class="eci-flag">🇮🇳</span>
                                 <div>
                                     <div class="card-title-main">भारत निर्वाचन आयोग</div>
-                                    <div class="card-subtitle">ELECTION MISSION OF INDIA</div>
+                                    <div class="card-subtitle">ELECTION COMMISSION OF INDIA</div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="voter-photo-section">
                             <div class="voter-photo">
-                                <i class="fas fa-user" id="voterPhotoIcon"></i>
+                                <i class="fas fa-user"></i>
                             </div>
                             <div class="voter-details">
                                 <div class="detail-row">
@@ -702,7 +1004,7 @@
             </div>
         </div>
 
-        <!-- Screen 2: Fingerprint Verification -->
+        <!-- Screen 3: Fingerprint Verification -->
         <div class="screen" id="screen2">
             <div class="card-custom">
                 <div class="header">
@@ -723,10 +1025,6 @@
                         <div class="step-circle">3</div>
                         <div class="step-label">Iris Scan</div>
                     </div>
-                    <div class="step">
-                        <div class="step-circle">4</div>
-                        <div class="step-label">Vote</div>
-                    </div>
                 </div>
 
                 <div id="voterInfo" class="status-message status-success">
@@ -739,7 +1037,7 @@
                     <i class="fas fa-fingerprint fingerprint-icon"></i>
                 </div>
 
-                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Place Your Finger on Mantra Scanner</h3>
+                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Place Your Finger on Scanner</h3>
 
                 <button class="btn-custom btn-primary-custom" onclick="simulateFingerprintScan()">
                     <i class="fas fa-fingerprint me-2"></i> Authenticate Fingerprint
@@ -752,12 +1050,12 @@
             </div>
         </div>
 
-        <!-- Screen 3: Already Voted -->
+        <!-- Screen 4: Iris Scan -->
         <div class="screen" id="screen3">
             <div class="card-custom">
                 <div class="header">
                     <h1>Iris Verification</h1>
-                    <p>Step 3 of 4 - Advanced Biometric</p>
+                    <p>Step 3 of 3 - Advanced Biometric</p>
                 </div>
 
                 <div class="progress-steps">
@@ -772,10 +1070,6 @@
                     <div class="step active">
                         <div class="step-circle">3</div>
                         <div class="step-label">Iris Scan</div>
-                    </div>
-                    <div class="step">
-                        <div class="step-circle">4</div>
-                        <div class="step-label">Vote</div>
                     </div>
                 </div>
 
@@ -802,7 +1096,7 @@
             </div>
         </div>
 
-        <!-- Screen 4: Already Voted -->
+        <!-- Screen 5: Already Voted -->
         <div class="screen" id="screenAlreadyVoted">
             <div class="card-custom">
                 <div class="status-message status-warning">
@@ -816,7 +1110,7 @@
                     <h5><i class="fas fa-info-circle"></i> Important Information:</h5>
                     <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
                         <li>✓ Each voter can vote only once per election</li>
-                        <li>✓ Your vote has been securely recorded in blockchain</li>
+                        <li>✓ Your vote has been securely recorded</li>
                         <li>✓ Duplicate voting is prevented by biometric verification</li>
                         <li>✓ Multiple voting attempts are logged for audit</li>
                     </ul>
@@ -828,467 +1122,29 @@
             </div>
         </div>
 
-        <!-- Screen 4: Voting Interface -->
-        <div class="screen" id="screen4">
-            <div class="card-custom">
-                <div class="header">
-                    <h1>Cast Your Vote</h1>
-                    <p>Step 3 of 3 - Choose Wisely!</p>
-                </div>
-
-                <div class="progress-steps">
-                    <div class="step completed">
-                        <div class="step-circle"><i class="fas fa-check"></i></div>
-                        <div class="step-label">ID Scan</div>
-                    </div>
-                    <div class="step completed">
-                        <div class="step-circle"><i class="fas fa-check"></i></div>
-                        <div class="step-label">Fingerprint</div>
-                    </div>
-                    <div class="step completed">
-                        <div class="step-circle"><i class="fas fa-check"></i></div>
-                        <div class="step-label">Iris Scan</div>
-                    </div>
-                    <div class="step active">
-                        <div class="step-circle">4</div>
-                        <div class="step-label">Vote</div>
-                    </div>
-                </div>
-
-                <h3 class="text-center mb-4" style="color: #333; font-weight: 700;">Select Your Candidate</h3>
-
-                <div id="candidatesList">
-                    <div class="candidate-card" onclick="selectCandidate(1)">
-                        <div class="candidate-symbol">🪷</div>
-                        <div class="candidate-info">
-                            <h3>Alpha Party</h3>
-                            <p>Symbol: Lotus | Candidate A</p>
-                        </div>
-                    </div>
-
-                    <div class="candidate-card" onclick="selectCandidate(2)">
-                        <div class="candidate-symbol">✋</div>
-                        <div class="candidate-info">
-                            <h3>Beta Party</h3>
-                            <p>Symbol: Hand | Candidate B</p>
-                        </div>
-                    </div>
-
-                    <div class="candidate-card" onclick="selectCandidate(3)">
-                        <div class="candidate-symbol">🧹</div>
-                        <div class="candidate-info">
-                            <h3>Gama Party</h3>
-                            <p>Symbol: Broom | Candidate C</p>
-                        </div>
-                    </div>
-
-                    <div class="candidate-card" onclick="selectCandidate(4)">
-                        <div class="candidate-symbol">🌾</div>
-                        <div class="candidate-info">
-                            <h3>Delta Party</h3>
-                            <p>Symbol: Wheat | Candidate D</p>
-                        </div>
-                    </div>
-
-                    <div class="candidate-card" onclick="selectCandidate(5)">
-                        <div class="candidate-symbol">⚡</div>
-                        <div class="candidate-info">
-                            <h3>Independent</h3>
-                            <p>Symbol: Lightning | Candidate E</p>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn-custom btn-primary-custom" id="castVoteBtn" disabled onclick="confirmVote()">
-                    <i class="fas fa-check-circle me-2"></i> Confirm & Cast Vote
-                </button>
-
-                <div class="info-box mt-4">
-                    <strong><i class="fas fa-lock"></i> Your Privacy is Protected:</strong><br>
-                    <small>✓ Anonymous voting<br>✓ End-to-end encryption<br>✓ Blockchain secured<br>✓ Cannot be traced to you</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Screen 5: Vote Success -->
-        <div class="screen" id="screen5">
+        <!-- Screen 6: Success -->
+        <div class="screen" id="screenSuccess">
             <div class="card-custom">
                 <div class="success-animation">
                     <div class="success-icon">
                         <i class="fas fa-check"></i>
                     </div>
-                    <h2 style="font-size: 2.5rem; font-weight: 700; color: #28a745;">Vote Cast Successfully!</h2>
-                    <p class="mt-3" style="font-size: 1.2rem;">Thank you for participating in the democratic process of India.</p>
-                    <p id="voteConfirmation" class="mt-3" style="font-size: 1.1rem; font-weight: 600;"></p>
+                    <h2 style="font-size: 2.5rem; font-weight: 700; color: #28a745;">Verification Complete!</h2>
+                    <p class="mt-3" style="font-size: 1.2rem;">All authentication layers passed successfully.</p>
+                    <p id="successVoterName" class="mt-3" style="font-size: 1.1rem; font-weight: 600;"></p>
                 </div>
 
                 <div class="status-message status-success mt-4">
-                    <h5><i class="fas fa-shield-alt"></i> Your Vote is Secured with Blockchain</h5>
-                    <p class="mt-3" style="font-size: 1.05rem;">Your vote has been encrypted and recorded in the distributed ledger.</p>
-                    <p class="mt-2"><strong>Transaction ID:</strong> <span id="txId" style="font-family: monospace; background: #f0f0f0; padding: 5px 10px; border-radius: 5px;"></span></p>
-                    <p class="mt-2"><strong>Timestamp:</strong> <span id="txTime"></span></p>
-                </div>
-
-                <div class="info-box mt-4" style="background: linear-gradient(135deg, #d4edda, #c3e6cb); border-left-color: #28a745;">
-                    <h5><i class="fas fa-info-circle"></i> What Happens Next:</h5>
+                    <h5><i class="fas fa-shield-alt"></i> Triple-Layer Authentication Completed</h5>
+                    <p class="mt-3" style="font-size: 1.05rem;">Voter identity verified through:</p>
                     <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
-                        <li>✓ Your vote is counted towards final results</li>
-                        <li>✓ Results announced after voting closes</li>
-                        <li>✓ Cannot vote again in this election</li>
-                        <li>✓ Audit trail maintained for transparency</li>
-                        <li>✓ QR code for verification generated</li>
+                        <li>✓ Voter ID Card Authentication</li>
+                        <li>✓ Fingerprint Biometric Verification</li>
+                        <li>✓ Iris Pattern Recognition</li>
                     </ul>
                 </div>
-
-                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
-                    <i class="fas fa-home me-2"></i> Complete & Return to Home
-                </button>
-            </div>
-        </div>
-
-        <!-- Screen 6: User Not Registered -->
-        <div class="screen" id="screen6">
-            <div class="card-custom">
-                <div class="status-message status-error">
-                    <i class="fas fa-times-circle" style="font-size: 5rem; margin-bottom: 20px;"></i>
-                    <h2 style="font-size: 2rem; font-weight: 700;">Voter Not Registered</h2>
-                    <p class="mt-3" style="font-size: 1.1rem;">The Voter ID you entered is not found in our database.</p>
-                    <p id="enteredId" class="mt-3" style="font-size: 1.2rem; font-weight: 700;"></p>
-                </div>
-
-                <div class="info-box mt-4" style="background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-left-color: #dc3545;">
-                    <h5><i class="fas fa-exclamation-triangle"></i> Possible Reasons:</h5>
-                    <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
-                        <li>❌ Voter ID not registered in this constituency</li>
-                        <li>❌ Incorrect Voter ID entered or scanned</li>
-                        <li>❌ RFID card not linked to voter database</li>
-                        <li>❌ Registration pending or incomplete</li>
-                        <li>❌ Card may be fake or duplicate</li>
-                    </ul>
-                </div>
-
-                <div class="info-box mt-3" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-left-color: #ffc107;">
-                    <h5><i class="fas fa-lightbulb"></i> What You Should Do:</h5>
-                    <p class="mt-2" style="font-size: 1.05rem;">Please contact the Election Officer or visit the voter registration desk to register or verify your details. You can also visit <strong>nvsp.in</strong> for online registration.</p>
-                </div>
-
-                <button class="btn-custom btn-primary-custom" onclick="resetToStart()">
-                    <i class="fas fa-redo me-2"></i> Try Again with Different ID
-                </button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script>
-        // Enhanced voter database with detailed information from the cards
-        const voterDatabase = {
-            'CDEFGAB123': { 
-                name: 'Iron-Man', 
-                fatherName: 'Not Defined',
-                gender: 'Alien',
-                dob: '1/1/1970',
-                hasVoted: false, 
-                registered: true,
-                photo: '',
-                cardImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjIwMCIgeT0iMTI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlZvdGVyIENhcmQgSW1hZ2U8L3RleHQ+PC9zdmc+'
-            },
-            'GABCDEFG123': { 
-                name: 'Thano Dione', 
-                fatherName: 'M Dione',
-                gender: 'Male',
-                dob: '15/08/1970',
-                hasVoted: true, 
-                registered: true, 
-                votedAt: 'December 13, 2024 at 10:30 AM',
-                photo: '👨',
-                cardImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjIwMCIgeT0iMTI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlZvdGVyIENhcmQgSW1hZ2U8L3RleHQ+PC9zdmc+'
-            }
-        };
-
-        let currentVoterId = '';
-        let selectedCandidate = null;
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            document.getElementById(screenId).classList.add('active');
-            
-            gsap.from(`#${screenId} .card-custom`, {
-                duration: 0.6,
-                y: 50,
-                opacity: 0,
-                ease: "power3.out"
-            });
-        }
-
-        function verifyVoterId() {
-            const voterIdInput = document.getElementById('voterId').value.trim().toUpperCase();
-            
-            if (!voterIdInput) {
-                gsap.to('#voterId', {
-                    duration: 0.1,
-                    x: -10,
-                    repeat: 5,
-                    yoyo: true,
-                    ease: "power1.inOut",
-                    onComplete: () => {
-                        gsap.set('#voterId', { x: 0 });
-                    }
-                });
-                return;
-            }
-
-            currentVoterId = voterIdInput;
-
-            // Enhanced RFID scanning animation
-            gsap.to('.scanner-circle', {
-                duration: 0.3,
-                scale: 1.3,
-                borderColor: '#4CAF50',
-                repeat: 3,
-                yoyo: true,
-                ease: "power2.inOut",
-                onComplete: () => {
-                    checkVoterStatus();
-                }
-            });
-
-            // Scanning line animation
-            gsap.to('.scanning-line', {
-                duration: 1,
-                top: '100%',
-                ease: "power1.inOut"
-            });
-        }
-
-        function checkVoterStatus() {
-            const voter = voterDatabase[currentVoterId];
-
-            if (!voter || !voter.registered) {
-                document.getElementById('enteredId').innerHTML = `<i class="fas fa-id-card"></i> ID: <strong>${currentVoterId}</strong>`;
-                showScreen('screen6');
-            } else {
-                displayVoterCard(voter);
-            }
-        }
-
-        function displayVoterCard(voter) {
-            document.getElementById('cardVoterName').textContent = voter.name;
-            document.getElementById('cardFatherName').textContent = voter.fatherName;
-            document.getElementById('cardGender').textContent = voter.gender;
-            document.getElementById('cardDOB').textContent = voter.dob;
-            document.getElementById('cardVoterId').textContent = `VOTER ID: ${currentVoterId}`;
-            document.getElementById('voterPhotoIcon').textContent = voter.photo;
-            
-            showScreen('screenVoterCard');
-
-            // Animate voter card
-            gsap.from('.voter-card', {
-                duration: 1,
-                rotateY: 90,
-                opacity: 0,
-                ease: "back.out(1.7)"
-            });
-        }
-
-        function proceedToFingerprint() {
-            const voter = voterDatabase[currentVoterId];
-            document.getElementById('voterName').innerHTML = `<strong>Name:</strong> ${voter.name}`;
-            document.getElementById('voterIdDisplay').innerHTML = `<strong>ID:</strong> ${currentVoterId}`;
-            showScreen('screen2');
-        }
-
-        function simulateFingerprintScan() {
-            const voter = voterDatabase[currentVoterId];
-
-            // Enhanced fingerprint animation
-            const tl = gsap.timeline();
-            
-            tl.to('.fingerprint-icon', {
-                duration: 0.2,
-                scale: 1.3,
-                repeat: 8,
-                yoyo: true,
-                ease: "power2.inOut"
-            })
-            .to('.fingerprint-scanner', {
-                duration: 0.3,
-                boxShadow: '0 20px 60px rgba(40, 167, 69, 0.6)',
-                background: 'linear-gradient(135deg, #28a745, #20c997)',
-                onComplete: () => {
-                    if (voter.hasVoted) {
-                        document.getElementById('votedInfo').innerHTML = 
-                            `<i class="fas fa-calendar-check"></i> You voted on: <strong>${voter.votedAt}</strong>`;
-                        showScreen('screenAlreadyVoted');
-                    } else {
-                        // Proceed to iris scan
-                        document.getElementById('irisVoterName').innerHTML = `<strong>Name:</strong> ${voter.name}`;
-                        showScreen('screen3');
-                    }
-                }
-            });
-        }
-
-        function simulateIrisScan() {
-            const voter = voterDatabase[currentVoterId];
-
-            // Enhanced iris animation
-            const tl = gsap.timeline();
-            
-            tl.to('.iris-icon', {
-                duration: 0.25,
-                scale: 1.2,
-                repeat: 8,
-                yoyo: true,
-                ease: "power2.inOut"
-            })
-            .to('.iris-ring', {
-                duration: 0.5,
-                scale: 1.3,
-                borderColor: 'rgba(40, 167, 69, 0.8)',
-                borderWidth: '6px'
-            })
-            .to('.iris-scanner', {
-                duration: 0.4,
-                boxShadow: '0 20px 60px rgba(40, 167, 69, 0.8)',
-                background: 'linear-gradient(135deg, #28a745, #20c997)',
-                onComplete: () => {
-                    showScreen('screen4');
-                }
-            });
-        }
-
-        function selectCandidate(candidateId) {
-            selectedCandidate = candidateId;
-            
-            document.querySelectorAll('.candidate-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            event.currentTarget.classList.add('selected');
-            document.getElementById('castVoteBtn').disabled = false;
-            
-            gsap.fromTo(event.currentTarget, 
-                { scale: 0.95 },
-                { 
-                    duration: 0.4,
-                    scale: 1.05,
-                    ease: "back.out(3)"
-                }
-            );
-        }
-
-        function confirmVote() {
-            if (!selectedCandidate) {
-                gsap.to('#castVoteBtn', {
-                    duration: 0.1,
-                    x: -5,
-                    repeat: 5,
-                    yoyo: true
-                });
-                return;
-            }
-
-            const candidateNames = [
-                'Nobitas National Party (🪷 Lotus)',
-                'National Congress (✋ Hand)',
-                'Common People Party (🧹 Broom)',
-                'Farmer\'s Front (🌾 Wheat)',
-                'Independent (⚡ Lightning)'
-            ];
-            const candidateName = candidateNames[selectedCandidate - 1];
-
-            const txId = 'LAVIS' + Date.now() + Math.floor(Math.random() * 10000);
-            const timestamp = new Date().toLocaleString('en-IN', { 
-                timeZone: 'Asia/Kolkata',
-                dateStyle: 'long',
-                timeStyle: 'short'
-            });
-
-            voterDatabase[currentVoterId].hasVoted = true;
-            voterDatabase[currentVoterId].votedAt = timestamp;
-
-            document.getElementById('voteConfirmation').innerHTML = 
-                `<i class="fas fa-user-check"></i> <strong>Voter:</strong> ${voterDatabase[currentVoterId].name}<br>
-                 <i class="fas fa-vote-yea"></i> <strong>Voted For:</strong> ${candidateName}`;
-            document.getElementById('txId').textContent = txId;
-            document.getElementById('txTime').textContent = timestamp;
-
-            showScreen('screen5');
-
-            gsap.from('.success-icon', {
-                duration: 0.8,
-                scale: 0,
-                rotation: 360,
-                ease: "back.out(2)"
-            });
-
-            // Confetti effect
-            for(let i = 0; i < 50; i++) {
-                createConfetti();
-            }
-        }
-
-        function createConfetti() {
-            const colors = ['#FF6B35', '#F7931E', '#28a745', '#2196F3', '#ffc107'];
-            const confetti = document.createElement('div');
-            confetti.style.position = 'fixed';
-            confetti.style.width = '10px';
-            confetti.style.height = '10px';
-            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.left = Math.random() * window.innerWidth + 'px';
-            confetti.style.top = '-10px';
-            confetti.style.opacity = '1';
-            confetti.style.borderRadius = '50%';
-            document.body.appendChild(confetti);
-
-            gsap.to(confetti, {
-                duration: 2 + Math.random() * 2,
-                y: window.innerHeight + 10,
-                x: (Math.random() - 0.5) * 200,
-                rotation: Math.random() * 360,
-                opacity: 0,
-                ease: "power1.in",
-                onComplete: () => {
-                    confetti.remove();
-                }
-            });
-        }
-
-        function resetToStart() {
-            currentVoterId = '';
-            selectedCandidate = null;
-            document.getElementById('voterId').value = '';
-            document.getElementById('castVoteBtn').disabled = true;
-            showScreen('screen1');
-        }
-
-        // Initial animations
-        gsap.from('.logo', {
-            duration: 1.2,
-            scale: 0,
-            rotation: 360,
-            ease: "back.out(2)"
-        });
-
-        gsap.from('.header h1', {
-            duration: 0.8,
-            y: -30,
-            opacity: 0,
-            delay: 0.3,
-            ease: "power2.out"
-        });
-
-        // Continuous scanner animation
-        gsap.to('.scanning-line', {
-            duration: 2,
-            top: '100%',
-            repeat: -1,
-            ease: "power1.inOut"
-        });
-    </script>
-</body>
 </html>
-
